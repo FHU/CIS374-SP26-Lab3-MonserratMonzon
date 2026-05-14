@@ -73,6 +73,24 @@ public class UnionFind<T>
     /// <returns>Returns true if all the items are in the same group. </returns>
     public bool AreAllConnected() 
     {
+        if (parent.Count == 0)
+            return true;
+
+        T root = default;
+        bool rootSet = false;
+        foreach (var item in parent.Keys)
+        {
+            if (!rootSet)
+            {
+                root = Find(item);
+                rootSet = true;
+            }
+            else if (!Find(item).Equals(root))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -81,7 +99,11 @@ public class UnionFind<T>
     /// </summary>
     public void Reset()
     {
-        
+        foreach (var item in parent.Keys)
+        {
+            parent[item] = item;
+            rank[item] = 1;
+        }
     }
 
 }

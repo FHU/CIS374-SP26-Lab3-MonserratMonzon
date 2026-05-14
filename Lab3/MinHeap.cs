@@ -13,49 +13,36 @@ public class MinHeap<T> where T : IComparable<T>
 
     public bool IsEmpty => Count == 0;
 
-
     public MinHeap(T[] initialArray = null)
     {
         array = new T[initialSize];
+        Count = 0;
 
-        if (initialArray == null) return;
+        if (initialArray == null)
+            return;
 
         foreach (var item in initialArray)
         {
             Add(item);
         }
-
     }
 
-    /// <summary>
-    /// Returns the min item but does NOT remove it.
-    /// Time complexity: O( 1 )
-    /// </summary>
     public T Peek()
     {
         if (IsEmpty)
-        {
-            throw new InvalidOperationException();
-        }
+            throw new Exception("Heap is empty.");
 
         return array[0];
     }
 
-    // TODO
-    /// <summary>
-    /// Adds given item to the heap.
-    /// Time complexity: O(log(n)) ***BUT*** it might be O(N) if we have to resize
-    /// </summary>
     public void Add(T item)
     {
+        if (Count == array.Length)
+            DoubleArrayCapacity();
+
         array[Count] = item;
         TrickleUp(Count);
         Count++;
-
-        if (Count == Capacity)
-        {
-            DoubleArrayCapacity();
-        }
     }
 
     public T Extract()
@@ -63,127 +50,146 @@ public class MinHeap<T> where T : IComparable<T>
         return ExtractMin();
     }
 
-    /// <summary>
-    /// Removes and returns the max item in the min-heap.
-    /// Time complexity: O( n )
-    /// </summary>
     public T ExtractMax()
     {
-        return default;
+        if (IsEmpty)
+            throw new Exception("Heap is empty.");
+
+        int maxIndex = 0;
+        for (int i = 1; i < Count; i++)
+        {
+            if (array[i].CompareTo(array[maxIndex]) > 0)
+                maxIndex = i;
+        }
+
+        T result = array[maxIndex];
+        Count--;
+        array[maxIndex] = array[Count];
+
+        if (maxIndex < Count)
+        {
+            TrickleDown(maxIndex);
+            TrickleUp(maxIndex);
+        }
+
+        return result;
     }
 
-    // TODO
-    /// <summary>
-    /// Removes and returns the min item in the min-heap.
-    /// Time complexity: O( log(n) )
-    /// </summary>
     public T ExtractMin()
     {
         if (IsEmpty)
-        {
-            throw new InvalidOperationException();
-        }
+            throw new Exception("Heap is empty.");
 
-        // save the min from the root
-        T min = array[0];
-
-        // swap the min with the last item
-        array[0] = array[Count - 1];
-
-        // remove the "last" item
+        T result = array[0];
         Count--;
+        array[0] = array[Count];
+        if (!IsEmpty)
+            TrickleDown(0);
 
-        // trickle down from root
-        TrickleDown(0);
-
-        return min;
+        return result;
     }
 
-    /// <summary>
-    /// Returns true if the heap contains the given value; otherwise false.
-    /// Time complexity: O( n )
-    /// </summary>
     public bool Contains(T value)
     {
         for (int i = 0; i < Count; i++)
         {
-            if (array[i].CompareTo(value) == 0)
-            {
+            if (array[i].Equals(value))
                 return true;
-            }
         }
 
         return false;
     }
 
-    // TODO
-    /// <summary>
-    /// Updates the first element with the given value from the heap.
-    /// Time complexity: O( n )
-    /// </summary>
     public void Update(T oldValue, T newValue)
     {
-        // find the node to update - O(n)
+        int index = -1;
+        for (int i = 0; i < Count; i++)
+        {
+            if (array[i].Equals(oldValue))
+            {
+                index = i;
+                break;
+            }
+        }
 
-        // update value - O(1)
+        if (index == -1)
+            throw new Exception("Value not found in heap.");
 
-        // trickle up or trickle down - O( log(n) )
-
+        array[index] = newValue;
+        TrickleDown(index);
+        TrickleUp(index);
     }
 
-    // TODO
-    /// <summary>
-    /// Removes the first element with the given value from the heap.
-    /// Time complexity: O( n )
-    /// </summary>
     public void Remove(T value)
     {
-        // find the node to remove
+        int index = -1;
+        for (int i = 0; i < Count; i++)
+        {
+            if (array[i].Equals(value))
+            {
+                index = i;
+                break;
+            }
+        }
 
-        // swap with last
+        if (index == -1)
+            throw new Exception("Value not found in heap.");
 
-        // trickleX
+        Count--;
+        array[index] = array[Count];
 
-        // Count--
-
+        if (index < Count)
+        {
+            TrickleDown(index);
+            TrickleUp(index);
+        }
     }
 
-    // TODO
-    // Time Complexity: O( log n )
     private void TrickleUp(int index)
     {
+        while (index > 0)
+        {
+            int parentIndex = Parent(index);
+            if (array[index].CompareTo(array[parentIndex]) >= 0)
+                break;
 
+            Swap(index, parentIndex);
+            index = parentIndex;
+        }
     }
 
-    // TODO
-    // Time Complexity: O( log n )
     private void TrickleDown(int index)
     {
+        while (true)
+        {
+            int left = LeftChild(index);
+            int right = RightChild(index);
+            int smallest = index;
 
+            if (left < Count && array[left].CompareTo(array[smallest]) < 0)
+                smallest = left;
+
+            if (right < Count && array[right].CompareTo(array[smallest]) < 0)
+                smallest = right;
+
+            if (smallest == index)
+                break;
+
+            Swap(index, smallest);
+            index = smallest;
+        }
     }
 
-    // TODO
-    /// <summary>
-    /// Gives the position of a node's parent, the node's position in the heap.
-    /// </summary>
     private static int Parent(int position)
     {
         return (position - 1) / 2;
     }
 
-    // TODO
-    /// <summary>
-    /// Returns the position of a node's left child, given the node's position.
-    /// </summary>
     private static int LeftChild(int position)
     {
         return 2 * position + 1;
     }
 
-    // TODO
-    /// <summary>
-    /// Returns the position of a node's right child, given the node's position.
-    /// </summary>
     private static int RightChild(int position)
     {
         return 2 * position + 2;
@@ -192,7 +198,6 @@ public class MinHeap<T> where T : IComparable<T>
     private void Swap(int index1, int index2)
     {
         var temp = array[index1];
-
         array[index1] = array[index2];
         array[index2] = temp;
     }
